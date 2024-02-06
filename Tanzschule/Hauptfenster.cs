@@ -19,16 +19,15 @@ namespace Tanzschule
 {
     public partial class Tanzschule : Form
     {
-        //public int IdAnmeldung { get; set; }
 
         public Tanzschule()
         {
             InitializeComponent();
-            //IdAnmeldung = idAnmeldung;
         }
 
         readonly Dictionary<int, Tanzkurs> kursById = new Dictionary<int, Tanzkurs>();
         readonly Dictionary<int, Taenzer> TaenzerById = new Dictionary<int, Taenzer>();
+        Tanzkurs markierterKurs = null;
 
         void AddTaenzer(Taenzer t)
         {
@@ -60,7 +59,7 @@ namespace Tanzschule
         {
             int index = dataGridViewTaenzerInKursen.Rows.Add();
             dataGridViewTaenzerInKursen.Rows[index].Cells["ColumnTaenzerId"].Value = imKurs.IdAnmeldung;
-            dataGridViewTaenzerInKursen.Rows[index].Cells["ColumnTaenzerTaenzerId"].Value = imKurs.Id;    // Variable Id???
+            dataGridViewTaenzerInKursen.Rows[index].Cells["ColumnTaenzerTaenzerId"].Value = imKurs.Id;
             dataGridViewTaenzerInKursen.Rows[index].Cells["ColumnTaenzerVorname"].Value = imKurs.Vorname;
             dataGridViewTaenzerInKursen.Rows[index].Cells["ColumnTaenzerNachname"].Value = imKurs.Nachname;
             dataGridViewTaenzerInKursen.Rows[index].Cells["ColumnTaenzerAdresse"].Value = imKurs.Adresse;
@@ -71,7 +70,7 @@ namespace Tanzschule
         void AddListeKurs(Tanzkurs Kurs)
         {
             int index = dataGridViewListeVonKurs.Rows.Add();
-            dataGridViewListeVonKurs.Rows[index].Cells["ColumnKursKursIds"].Value = Kurs.KursId;     // Variable KursId??
+            dataGridViewListeVonKurs.Rows[index].Cells["ColumnKursKursIds"].Value = Kurs.KursId;
             dataGridViewListeVonKurs.Rows[index].Cells["ColumnKursKursId"].Value = Kurs.KursId;
             dataGridViewListeVonKurs.Rows[index].Cells["ColumnKursKursname"].Value = Kurs.Kursname;
             dataGridViewListeVonKurs.Rows[index].Cells["ColumnKursTanzstil"].Value = Kurs.Tanzstil;
@@ -164,7 +163,6 @@ namespace Tanzschule
                     dateTimePickerGeburtsdatum.Focus();
                     return;
                 }
-                //int idAnmeldung = 0;
 
                 Datenbank.Open();       // Table Taenzer - Taenzer
                 MySqlCommand command = Datenbank.CreateCommand();
@@ -188,7 +186,6 @@ namespace Tanzschule
             {
                 kursButtonSpeichern();
             }
-            // Video 07:41
         }
 
         private void buttonBearbeiten_Click(object sender, EventArgs e)
@@ -284,7 +281,6 @@ namespace Tanzschule
                 textBoxHausnummer.Text = "";
                 dateTimePickerGeburtsdatum.Value = DateTime.Now;
 
-                // TODO - Checkbox für Seperate Bearbeitung
             }
             else if (checkBox.Checked == true)
             {
@@ -321,7 +317,6 @@ namespace Tanzschule
                 dataGridViewTaenzer.Rows.RemoveAt(index);
                 TaenzerById.Remove(id);
 
-                // TODO - Checkbox für Seperate Löschung
                 
             }
             else if (checkBox.Checked == true)
@@ -366,7 +361,6 @@ namespace Tanzschule
 
             AddTaenzerImKurs(taenzer);
             AddListeKurs(kurs);
-            // TODO - Datenbank anbindung für das Hinzufügen eines Kurses -------------- Funktioniert nicht
             Datenbank.Open();       // Table Taenzer
             MySqlCommand command = Datenbank.CreateCommand();
             command.CommandText = "INSERT INTO `anmeldungen` (`taenzerId`, `kursId`) VALUES(@taenzerId, @kursId)";
@@ -399,9 +393,6 @@ namespace Tanzschule
             int taenzerId = (int)dataGridViewTaenzerInKursen.Rows[indexTaenzer].Cells["ColumnTaenzerTaenzerId"].Value;
             Taenzer imKurs = TaenzerById[taenzerId];
 
-            // TODO -- Debuggen/Abmelden fixen -- Gesamten Code aufräumen + Bennenungen Strukturiert überarbeiten (ändern z.B. Teilnehmer zu- Taenzer
-            // TODO - Datenbank anbindung = delete ----------- Funktioniert nicht
-
             Datenbank.Open();
             MySqlCommand cmd = Datenbank.CreateCommand();
             cmd.CommandText = "DELETE FROM anmeldungen WHERE taenzerId = @taenzerId AND kursId=@kursId";
@@ -412,10 +403,8 @@ namespace Tanzschule
             Datenbank.Close();
 
 
-
-            //dataGridViewTaenzer.Rows.RemoveAt(index);
-            //TaenzerById.Remove(id);
             //-------------------------
+
             dataGridViewTaenzerInKursen.Rows.RemoveAt(indexTaenzer);        
             dataGridViewTaenzer_SelectionChanged(sender, e);                // Aktualisiert die Liste
         }
@@ -437,13 +426,13 @@ namespace Tanzschule
             {
                 return;
             }
-            DataGridViewCell cell = dataGridViewTaenzer.Rows[index].Cells["ColumnId"];          // Nochmal erklären lassen
+            DataGridViewCell cell = dataGridViewTaenzer.Rows[index].Cells["ColumnId"];
             if (cell.Value == null)
             {
                 return;
             }
             int id = (int)cell.Value;
-            Taenzer t = TaenzerById[id];            // Fehler -- WHY???? 
+            Taenzer t = TaenzerById[id];
 
             Datenbank.Open();       // Table Anmeldung
             MySqlCommand cmd = Datenbank.CreateCommand();
@@ -462,15 +451,14 @@ namespace Tanzschule
 
             Datenbank.Close();
         }
-        // weitere variable erstellen -- Diese nutzen um den namen des Markierten Kurses drin zu SPeichern - diesen beim Label anzeigen lassen welches den Aktuell ausgewählten Kurs anzeigt
-        Tanzkurs markierterKurs = null;         //
+
         private void dataGridViewKurs_SelectionChanged(object sender, EventArgs e)
         {
             markierterKurs = null;
             dataGridViewTaenzerInKursen.Rows.Clear();
 
             int index = -1;
-            if (dataGridViewTanzkurs.SelectedRows.Count == 1)                                       // Innerlich durchgehen, gedanklich verfolgen - Lernen
+            if (dataGridViewTanzkurs.SelectedRows.Count == 1)
             {
                 index = dataGridViewTanzkurs.SelectedRows[0].Index;
             }
@@ -484,7 +472,7 @@ namespace Tanzschule
             }
             
             labelTeilnehmerInKursen.Text = dataGridViewTanzkurs.SelectedColumns.ToString();
-            DataGridViewCell cell = dataGridViewTanzkurs.Rows[index].Cells["ColumnkursId"];         // Nochmal erklären lassen
+            DataGridViewCell cell = dataGridViewTanzkurs.Rows[index].Cells["ColumnkursId"];
             if (cell.Value == null)
             {
                 return;
@@ -495,7 +483,7 @@ namespace Tanzschule
 
             Datenbank.Open();       // Table Anmeldung
             MySqlCommand cmd = Datenbank.CreateCommand();
-            cmd.CommandText = "select taenzerId from anmeldungen where kursId=" + k.KursId;       // GGF. Fehler?? /kursId/- statt taenzerid? -- EDIT Ist Richtig!?!?
+            cmd.CommandText = "select taenzerId from anmeldungen where kursId=" + k.KursId;
             MySqlDataReader reader = cmd.ExecuteReader();       
             while (reader.Read())
             {
